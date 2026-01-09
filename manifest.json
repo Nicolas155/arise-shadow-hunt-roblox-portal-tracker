@@ -3,7 +3,6 @@
   "name": "Roblox Portal Tracker",
   "version": "1.0",
   "description": "Tracks portal and siege times on Roblox servers.",
-  "permissions": ["storage"],
   "icons": {
     "16": "imgs/icon16.png",
     "32": "imgs/icon32.png",
