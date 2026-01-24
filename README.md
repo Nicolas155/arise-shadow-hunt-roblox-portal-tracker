@@ -58,5 +58,11 @@ A powerful browser extension script designed to help players track **Portal** an
 2.  Navigate to the game's server list on Roblox.
 3.  The dashboard will appear automatically.
 
+## Automatic Tracking
+
+If you want to track server automatically, check my other project that integrates via API with this extension.
+
+<a href="https://github.com/Nicolas155/roblox-portal-tracker-screen-ocr" target="_blank" style="color:#00a2ff">GitHub Project</a>
+
 ---
 *Current Version: v1.1*
