@@ -2,17 +2,19 @@ window.RPT = window.RPT || {};
 
 (function() {
     RPT.CONFIG_KEY = 'roblox_timer_config_v3_en';
+    RPT.SERVER_DATA_KEY = 'rpt_server_data_v1';
     
     RPT.state = {
         trackedServers: new Map(),
         lastClickedButton: null,
         serverCounter: 0,
         isMinimized: false,
-        autoScroll: false,
         soundEnabled: true,
+        apiEnabled: false,
+        skipDeleteConfirm: false,
         volume: 0.5,
-        autoStart: false,
         filterMode: 'all', 
+        filters: [],
         audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
         scrollInterval: null
     };
@@ -23,14 +25,18 @@ window.RPT = window.RPT || {};
         const parsed = JSON.parse(savedConfig);
         RPT.state.volume = parsed.volume ?? 0.5;
         RPT.state.soundEnabled = parsed.soundEnabled ?? true;
-        RPT.state.autoStart = parsed.autoStart ?? false;
+        RPT.state.apiEnabled = parsed.apiEnabled ?? false;
+        RPT.state.skipDeleteConfirm = parsed.skipDeleteConfirm ?? false;
+        RPT.state.filters = parsed.filters || [];
     }
 
     RPT.saveConfig = function() {
         localStorage.setItem(RPT.CONFIG_KEY, JSON.stringify({
             volume: RPT.state.volume,
             soundEnabled: RPT.state.soundEnabled,
-            autoStart: RPT.state.autoStart
+            apiEnabled: RPT.state.apiEnabled,
+            skipDeleteConfirm: RPT.state.skipDeleteConfirm,
+            filters: RPT.state.filters
         }));
     };
 
@@ -64,5 +70,24 @@ window.RPT = window.RPT || {};
             gainNode.gain.linearRampToValueAtTime(0.01, now + 0.2);
             osc.start(now); osc.stop(now + 0.2);
         }
+    };
+
+    RPT.saveServerState = function(entry) {
+        if(!entry.serverId) {
+            return;
+        }
+        const all = JSON.parse(localStorage.getItem(RPT.SERVER_DATA_KEY)||"{}");
+        const now = Date.now();
+        let target = null;
+        if(entry.state==='running') target = now + (entry.timeLeft*1000);
+        
+        all[entry.serverId] = {
+            mode: entry.mode,
+            state: entry.state,
+            targetTimestamp: target,
+            savedTimeLeft: entry.timeLeft,
+            wasVisited: entry.wasVisited
+        };
+        localStorage.setItem(RPT.SERVER_DATA_KEY, JSON.stringify(all));
     };
 })();

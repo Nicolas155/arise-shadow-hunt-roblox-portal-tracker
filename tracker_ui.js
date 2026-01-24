@@ -41,8 +41,9 @@
         button { cursor: pointer; border: none; border-radius: 3px; color: white; transition: 0.2s; }
         button:hover { opacity: 0.8; }
         .btn-icon { background: transparent; font-size: 14px; padding: 2px 5px; }
-        .btn-nudge { background: #444; color: #ccc; font-size: 9px; padding: 1px 4px; margin: 0 1px; }
-        .btn-locate { background: #00a2ff; padding: 2px 6px; font-size: 10px; }
+        .btn-nudge { background: #444; color: #ccc; font-size: 11px; padding: 3px 8px; margin: 0 1px; }
+        .btn-locate { background: #00a2ff; padding: 4px 10px; font-size: 11px; }
+        .btn-delete { background: #d83636; padding: 4px 8px; font-size: 11px; margin-left: 2px; }
         
         /* TAGS */
         .status-tags { display: flex; gap: 4px; margin-bottom: 2px; align-items: center; }
@@ -100,6 +101,13 @@
         .help-content li { margin-bottom: 4px; }
         .help-content code { background: #444; padding: 1px 4px; border-radius: 3px; font-family: monospace; color: #81d4fa; }
         .btn-close-help { float: right; background: #d83636; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+        /* FILTERS */
+        .filter-panel { background: #252525; padding: 8px; border-bottom: 1px solid #333; display: none; flex-direction: column; gap: 5px; }
+        .filter-panel.visible { display: flex; }
+        .filter-row { display: flex; gap: 5px; align-items: center; }
+        .filter-input { flex: 1; background: #111; border: 1px solid #444; color: #ddd; padding: 3px 6px; font-size: 11px; border-radius: 3px; }
+        .btn-remove-filter { background: #d83636; color: white; border: none; width: 20px; height: 20px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     `;
     document.head.appendChild(style);
 
@@ -113,7 +121,7 @@
             <div id="resize-handle-tl" class="resize-handle-tl" title="Drag to Resize"></div>
             <div class="dash-header">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span>🛡️ <b>Portal Tracker v1.0</b></span>
+                    <span>🛡️ <b>Portal Tracker v1.1</b></span>
                     <button id="btn-help" class="btn-icon" style="background:#00a2ff; width:18px; height:18px; line-height:14px; padding:0; border-radius:50%; font-weight:bold;" title="Help">?</button>
                 </div>
                 <button id="btn-minimize" class="btn-icon">_</button>
@@ -124,21 +132,30 @@
                     <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="${RPT.state.volume}" style="width:60px">
                 </div>
                 <div style="display:flex; gap:5px; align-items:center; border-left:1px solid #444; padding-left:8px;">
-                    <label class="toggle-switch"><input type="checkbox" id="chk-autostart" ${RPT.state.autoStart?'checked':''}><span class="slider"></span></label>
-                    <span style="font-size:10px">AutoStart</span>
+                    <label class="toggle-switch"><input type="checkbox" id="chk-api" ${RPT.state.apiEnabled?'checked':''}><span class="slider"></span></label>
+                    <span style="font-size:10px">API</span>
                 </div>
                 <div style="display:flex; gap:5px; align-items:center; border-left:1px solid #444; padding-left:8px;">
-                    <label class="toggle-switch"><input type="checkbox" id="chk-autoscroll"><span class="slider"></span></label>
-                    <span style="font-size:10px">Scroll</span>
+                    <label class="toggle-switch"><input type="checkbox" id="chk-skip-confirm" ${RPT.state.skipDeleteConfirm?'checked':''}><span class="slider"></span></label>
+                    <span style="font-size:10px">Fast Del</span>
                 </div>
                  <select id="sel-filter" style="background:#333; color:white; border:none; font-size:10px; margin-left:auto;">
                     <option value="all">Show All</option>
                     <option value="active">Show Active</option>
                 </select>
+                <button id="btn-toggle-filter" class="btn-icon" style="margin-left:5px;" title="Filter Servers">🌪️</button>
+                <button id="btn-clear-data" class="btn-icon" style="margin-left:5px; background:#d83636;" title="Clear All Saved Data">💣</button>
+            </div>
+            <div id="filter-panel" class="filter-panel">
+                <div id="filter-list"></div>
+                <div style="display:flex; gap:5px; margin-top:5px;">
+                    <button id="btn-add-filter" class="btn-nudge" style="flex:1; padding:4px;">+ Add Rule</button>
+                    <button id="btn-apply-filter" class="btn-locate" style="flex:1; background:#d83636; padding:4px;">Apply Filters</button>
+                </div>
             </div>
             <div class="dash-body">
                 <table>
-                    <thead><tr><th width="30">ID</th><th width="40">Mode</th><th>Status & Location</th><th width="70">Sync</th><th width="40">Go</th></tr></thead>
+                    <thead><tr><th width="30">ID</th><th width="40">Mode</th><th>Status & Location</th><th width="160">Controls</th></tr></thead>
                     <tbody id="dash-rows"></tbody>
                 </table>
             </div>
@@ -160,9 +177,11 @@
                             Input = <code>Time until Spawn</code>.
                         </li>
                     </ul>
-                    <h2>2. Tags</h2><ul><li><span class="tag-base tag-here">📍 HERE</span> : The server you are currently in (last clicked).</li><li><span class="tag-base tag-visited">👣 VISITED</span> : Servers you have previously joined. It's cleared everytime portals spawn so you keep track of each server you still need to visit.</li></ul>
+                    <h2>2. Tags</h2><ul><li><span class="tag-base tag-here">📍 HERE</span> : The server you are currently in (last clicked).</li><li><span class="tag-base tag-visited">👣 VISITED</span> : Servers you have previously joined. It's cleared everytime portals spawn so you keep track of each server you still need to visit.</li><li><span class="tag-base tag-portal-warm">WARMUP</span> : Appears when less than 60 seconds remain before the portal opens.</li></ul>
                     <h2>3. How to Track</h2><ul><li>Find the <b>Local Controls</b> added to every server card.</li><li>Enter minutes in the box and click <b>▶</b>.</li><li><b>Sync:</b> Use <code>+30s</code> / <code>-30s</code> if timer is off.</li></ul>
-                    <h2>4. Features</h2><ul><li><b>Go Button:</b> Scrolls to server.</li><li><b>AutoStart:</b> If ON, clicking "Join" starts timer.</li></ul>
+                    <h2>4. Features</h2><ul><li><b>Go Button:</b> Scrolls to server.</li><li><b>API Integration:</b> Enables automatic timer synchronization with an external Python script running on your desktop. This requires the Python helper to be running to read game memory/screen. If disabled, no polling occurs.<br>For setup instructions, visit the <a href="https://github.com/Nicolas155/roblox-portal-tracker-screen-ocr" target="_blank" style="color:#00a2ff">GitHub Project</a>. This is optional, but highly recommended if you want to fully automate time tracking.</li><li><b>Fast Delete:</b> If enabled, deleting a server (Trash icon) happens instantly without confirmation. If disabled, a warning appears.</li></ul>
+                    <h2>5. Filters</h2><ul><li>Click <b>🌪️</b> to open filter menu.</li><li>Add keywords (e.g., "Tokyo") to remove servers containing that text.</li><li>Click <b>Apply</b> to remove matching servers from the list and the page.</li></ul>
+                    <h2>6. Data & Storage</h2><ul><li><b>Auto-Save:</b> Timers are saved automatically. If you refresh the page, different servers might appear first. <b>Scroll down</b> to load more servers; if a previously tracked server appears, its timer will be restored automatically.</li><li><b>Clear Data (💣):</b> Permanently deletes all saved tracking history. Use this if you want to start fresh.</li></ul>
                 </div>
             </div>
         `;
@@ -185,10 +204,39 @@
                     entry.wasVisited = false;
                     if(entry.intervalId) clearInterval(entry.intervalId);
                     if(entry.inputElement) entry.inputElement.value = (isChecked ? 10 : 20);
+                    RPT.saveServerState(entry);
                     RPT.renderDashboard();
                 }
             }
         });
+
+        // Filter Logic
+        const filterPanel = dashboard.querySelector('#filter-panel');
+        const filterList = dashboard.querySelector('#filter-list');
+        
+        dashboard.querySelector('#btn-clear-data').onclick = () => {
+            if(confirm("⚠️ DANGER ZONE\n\nThis will permanently delete ALL tracked server data from your browser storage.\n\nAre you sure you want to reset everything?")) {
+                localStorage.removeItem(RPT.SERVER_DATA_KEY);
+                location.reload();
+            }
+        };
+
+        dashboard.querySelector('#btn-toggle-filter').onclick = () => filterPanel.classList.toggle('visible');
+        
+        const addFilterRow = (val = '') => {
+            const row = document.createElement('div'); row.className = 'filter-row';
+            const inp = document.createElement('input'); inp.className = 'filter-input'; inp.value = val; inp.placeholder = 'Keyword...';
+            const btnDel = document.createElement('button'); btnDel.className = 'btn-remove-filter'; btnDel.textContent = '×';
+            const save = () => { RPT.state.filters = Array.from(filterList.querySelectorAll('.filter-input')).map(i=>i.value); RPT.saveConfig(); };
+            inp.oninput = save;
+            btnDel.onclick = () => { row.remove(); save(); };
+            row.append(inp, btnDel);
+            filterList.appendChild(row);
+        };
+        
+        dashboard.querySelector('#btn-add-filter').onclick = () => addFilterRow();
+        dashboard.querySelector('#btn-apply-filter').onclick = () => RPT.applyFilters();
+        if(RPT.state.filters) RPT.state.filters.forEach(f => addFilterRow(f));
 
         document.body.appendChild(dashboard);
         return dashboard;
@@ -230,25 +278,38 @@
         tdStatus.className = 'col-status';
         tr.appendChild(tdStatus);
 
-        // SYNC
-        const tdSync = document.createElement('td');
+        // CONTROLS
+        const tdControls = document.createElement('td');
+        tdControls.style.whiteSpace = 'nowrap';
         const btnSub = document.createElement('button'); btnSub.className='btn-nudge'; btnSub.textContent='-30s'; btnSub.onclick=()=>RPT.adjustTime(entry,-30);
         const btnAdd = document.createElement('button'); btnAdd.className='btn-nudge'; btnAdd.textContent='+30s'; btnAdd.onclick=()=>RPT.adjustTime(entry,30);
-        tdSync.append(btnSub, btnAdd); 
-        tr.appendChild(tdSync);
-
-        // GO
-        const tdGo = document.createElement('td');
-        const btnGo = document.createElement('button'); btnGo.className='btn-locate'; btnGo.textContent='Go';
-        btnGo.onclick = () => { 
+        
+        const btnGo = document.createElement('button'); btnGo.className='btn-locate'; btnGo.textContent='Go'; btnGo.style.marginLeft='5px';
+        btnGo.onclick = (e) => { 
+            e.preventDefault(); e.stopPropagation();
             const b = entry.buttonElement;
             if(b && b.isConnected) { 
                 b.scrollIntoView({behavior:'smooth', block:'center'});
-                let c=0; const i=setInterval(()=>{ c++; b.style.opacity=(c%2===0)?'1':'0.3'; b.style.border=(c%2===0)?'2px solid red':''; if(c>6){clearInterval(i); b.style.opacity=''; b.style.border='';} },150);
+                let c=0; const i=setInterval(()=>{ c++; b.style.backgroundColor=(c%2===0)?'red':''; b.style.color=(c%2===0)?'white':''; if(c>6){clearInterval(i); b.style.backgroundColor=''; b.style.color='';} },200);
             } 
         };
-        tdGo.appendChild(btnGo); 
-        tr.appendChild(tdGo);
+        
+        const btnDel = document.createElement('button'); btnDel.className='btn-delete'; btnDel.textContent='🗑️';
+        btnDel.title = "Remove server from list and page";
+        btnDel.onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const doDelete = () => {
+                const card = entry.buttonElement.closest('li');
+                if (card) card.remove();
+                RPT.state.trackedServers.delete(entry.buttonElement);
+                RPT.renderDashboard();
+            };
+            if (RPT.state.skipDeleteConfirm) doDelete();
+            else if (confirm("Are you sure you want to remove this server? It will be deleted from the page.")) doDelete();
+        };
+
+        tdControls.append(btnSub, btnAdd, btnGo, btnDel); 
+        tr.appendChild(tdControls);
 
         RPT.updateRow(tr, entry);
         return tr;
@@ -277,6 +338,9 @@
         if (RPT.state.isMinimized) return;
         const tbody = document.getElementById('dash-rows');
         if (!tbody) return;
+
+        const dashBody = document.querySelector('.dash-body');
+        const currentScroll = dashBody ? dashBody.scrollTop : 0;
         
         const existingRows = new Map();
         Array.from(tbody.children).forEach(tr => {
@@ -291,10 +355,11 @@
         });
         filtered.sort((a, b) => {
             const getScore = (e) => {
-                if (e.mode === 'portal') { if (e.timeLeft >= 300) return 2000 + e.timeLeft; if (e.timeLeft < 60) return 3000 - e.timeLeft; return 500; }
+                if (e.mode === 'portal') { if (e.timeLeft >= 300) return 2000 + Math.floor(e.timeLeft/60); if (e.timeLeft < 60) return 3000 - e.timeLeft; return 500; }
                 if (e.state === 'finished') return 4000; if (e.state === 'running') return 1000; return 0;
             };
-            return getScore(b) - getScore(a);
+            const diff = getScore(b) - getScore(a);
+            return diff !== 0 ? diff : a.id - b.id;
         });
 
         filtered.forEach(entry => {
@@ -309,6 +374,8 @@
         });
         
         existingRows.forEach(tr => tr.remove());
+
+        if (dashBody) dashBody.scrollTop = currentScroll;
     };
 
     RPT.createLocalControls = function(entry) {
@@ -322,12 +389,20 @@
         const btnP = document.createElement('button'); btnP.textContent='▶'; btnP.style.background='#00b06f'; btnP.className='btn-nudge';
         const btnS = document.createElement('button'); btnS.textContent='⏹'; btnS.style.background='#d83636'; btnS.className='btn-nudge';
         const dsp = document.createElement('span'); dsp.textContent='--:--'; dsp.style.fontFamily='monospace'; dsp.style.marginLeft='5px'; dsp.style.fontSize='10px';
-        const start = () => {
-            const v = parseFloat(inp.value); if(isNaN(v)) return;
+        const start = (restore = false) => {
             if(entry.intervalId) clearInterval(entry.intervalId);
-            entry.timeLeft = Math.floor(v*60); entry.state='running'; entry.lastAudioPhase=null;
+            if(!restore) {
+                const v = parseFloat(inp.value); if(isNaN(v)) return;
+                if(entry.mode === 'portal' && v > 10) {
+                    alert("⚠️ Limit Exceeded: 10 Minutes\n\nIn Portal Mode, the max time is 10 minutes.\nPlease check the Help (?) button for instructions.");
+                    return;
+                }
+                entry.timeLeft = Math.floor(v*60); 
+            }
+            entry.state='running'; entry.lastAudioPhase=null;
             if (entry.buttonElement === RPT.state.lastClickedButton) entry.wasVisited = true;
             RPT.updateDisplayLocal(dsp, entry); RPT.renderDashboard();
+            RPT.saveServerState(entry);
             entry.intervalId = setInterval(()=>{
                 entry.timeLeft--;
                 if(entry.mode==='portal') {
@@ -336,14 +411,39 @@
                     if(entry.timeLeft===30 && entry.lastAudioPhase!=='warm') { RPT.playAlert('warmup'); entry.lastAudioPhase='warm'; }
                 } else { if(entry.timeLeft<=0) entry.state='finished'; }
                 RPT.updateDisplayLocal(dsp, entry);
+                if(entry.timeLeft % 5 === 0) RPT.saveServerState(entry);
                 RPT.renderDashboard();
             }, 1000);
         };
         btnP.onclick=(e)=>{e.stopPropagation(); start();};
-        btnS.onclick=(e)=>{e.stopPropagation(); clearInterval(entry.intervalId); entry.state='stopped'; dsp.textContent='Stop'; dsp.style.color='#aaa'; RPT.renderDashboard();};
+        btnS.onclick=(e)=>{e.stopPropagation(); clearInterval(entry.intervalId); entry.state='stopped'; dsp.textContent='Stop'; dsp.style.color='#aaa'; RPT.saveServerState(entry); RPT.renderDashboard();};
         row2.append(inp, btnP, btnS, dsp); container.appendChild(row2);
         const card = entry.buttonElement.closest('.rbx-game-server-item');
         if (card) card.appendChild(container); else entry.buttonElement.parentNode.appendChild(container);
         entry.controlsElement = container; entry.displayElement = dsp; entry.inputElement = inp; entry.startFn = start;
+    };
+
+    RPT.applyFilters = function() {
+        const inputs = document.querySelectorAll('.filter-input');
+        const keywords = Array.from(inputs).map(i => i.value.trim().toLowerCase()).filter(v => v);
+        if (keywords.length === 0) return;
+        
+        const toRemove = [];
+        RPT.state.trackedServers.forEach((entry, btn) => {
+            const card = btn.closest('li');
+            if (!card) return;
+            const info = card.querySelector('.roseal-server-info .server-region-info .info-text');
+            if (info) {
+                const text = info.textContent.toLowerCase();
+                if (keywords.some(k => text.includes(k))) toRemove.push(entry);
+            }
+        });
+        
+        toRemove.forEach(entry => {
+            const card = entry.buttonElement.closest('li');
+            if (card) card.remove();
+            RPT.state.trackedServers.delete(entry.buttonElement);
+        });
+        if (toRemove.length > 0) RPT.renderDashboard();
     };
 })();
