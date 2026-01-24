@@ -355,8 +355,18 @@
         });
         filtered.sort((a, b) => {
             const getScore = (e) => {
-                if (e.mode === 'portal') { if (e.timeLeft >= 300) return 2000 + Math.floor(e.timeLeft/60); if (e.timeLeft < 60) return 3000 - e.timeLeft; return 500; }
-                if (e.state === 'finished') return 4000; if (e.state === 'running') return 1000; return 0;
+                // 1. Warmup
+                if (e.state === 'running' && e.mode === 'portal' && e.timeLeft < 60 && e.timeLeft > 0) return 40000 + (60 - e.timeLeft);
+                // 2. Portal ON
+                if (e.state === 'running' && e.mode === 'portal' && e.timeLeft >= 300) return 30000 + e.timeLeft;
+                // 3. Portal OFF
+                if (e.state === 'running' && e.mode === 'portal') return 20000 + e.timeLeft;
+                
+                // 4. Others
+                if (e.state === 'finished') return 5000;
+                if (e.state === 'running') return 4000;
+                if (e.wasVisited) return 1000;
+                return 0;
             };
             const diff = getScore(b) - getScore(a);
             return diff !== 0 ? diff : a.id - b.id;
