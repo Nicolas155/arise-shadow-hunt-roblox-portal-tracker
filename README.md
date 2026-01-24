@@ -1,52 +1,62 @@
-# 📜 Portal Tracker Script - Release Notes
+# ️ Roblox Portal Tracker v1.1
 
-### **v6.0: The Localization & Tracking Update**
-*Current Version*
+A powerful browser extension script designed to help players track **Portal** and **Siege** timers in *Arise: Shadow Hunt* directly from the Roblox server list page.
 
-* **🌍 Full English Localization:** The entire interface (Dashboard, Buttons, Status Messages, and Logs) has been translated to English.
-* **📍 "You Are Here" Indicator:** Added a blue flashing tag **`📍 HERE`** to the Dashboard for the server currently selected/clicked.
-* **👣 Cycle Tracking:** Added a purple **`👣 VISITED`** tag to servers you have already checked within the current portal cycle.
-* **🔄 Smart Tag Reset:** The "Visited" status automatically clears when a specific server's timer hits `00:00` and resets to `10:00`, allowing you to track the next cycle accurately.
-* **📉 Stability:** Improved table sorting logic to prevent visual confusion when statuses change rapidly.
+## 🚀 Features
+
+### 1. 📊 Interactive Dashboard
+*   **Floating Overlay:** A draggable, resizable, and minimizable dashboard that stays on top of the Roblox page.
+*   **Live Status:** Shows the status of all tracked servers in real-time.
+*   **Progress Bars:** Visual indicators for remaining time.
+
+### 2. ⏱️ Dual Tracking Modes
+*   **Portal Mode (Loop):**
+    *   Designed for the 10-minute portal cycle.
+    *   **Phases:**
+        *   🟢 **ON:** Portal is open (10m - 5m).
+        *   ⚪ **OFF:** Portal is closed (5m - 0m).
+        *   🟡 **WARMUP:** Less than 60s until open.
+    *   **Auto-Reset:** Automatically resets to 10:00 when the timer hits 0, clearing "Visited" tags for the new cycle.
+*   **Siege Mode (One-time):**
+    *   Standard countdown for Siege spawns.
+    *   Turns 🔴 **RED** when the timer finishes.
+
+### 3. 🎮 Server List Integration
+*   **Local Controls:** Adds a control panel to every server card on the Roblox page.
+*   **Quick Presets:** Buttons for `5m`, `10m`, and `120m`.
+*   **Manual Input:** Type custom minutes (Max 10m for Portal Mode).
+*   **Play/Stop:** Manually start or stop tracking specific servers.
+
+### 4. 🔊 Audio Alerts
+*   **Built-in Sounds:** No external files required.
+    *   🔔 **Ding:** Plays when a Portal opens.
+    *   ⚠️ **Bip:** Plays during the 30s warmup phase.
+*   **Volume Control:** Slider and Mute button directly in the dashboard header.
+
+### 5. 🤖 Automation & API
+*   **API Integration:** Optional toggle to sync timers with an external Python OCR/Memory script.
+    *   *Requires running the companion Python script.*
+*   **Auto-Save:** Timers persist even if you refresh the page.
+*   **Smart Restoration:** If you scroll down and load a server you were previously tracking, its timer restores automatically.
+
+### 6. 🧭 Navigation & Management
+*   **"Go" Button:** Instantly scrolls the page to the specific server card and flashes it **Red** for visibility.
+*   **Sync Controls:** `+30s` / `-30s` buttons to adjust timers if they drift.
+*   **Fast Delete:** Toggle to remove servers instantly without a confirmation popup.
+*   **Data Wipe:** "Bomb" button (💣) to clear all stored data and start fresh.
+
+### 7. 🔍 Filters & Tags
+*   **Status Filters:** Toggle between "Show All" and "Show Active" (Running/Open).
+*   **Keyword Filters:** Remove servers based on region or text (e.g., "Tokyo").
+*   **Smart Tags:**
+    *   📍 **HERE:** The server you last clicked/joined.
+    *   👣 **VISITED:** Servers you've checked this cycle.
+    *   🔥 **WARMUP:** Portals about to open.
+
+## 📦 Installation
+1.  Load the extension in your browser (Developer Mode).
+2.  Navigate to the game's server list on Roblox.
+3.  The dashboard will appear automatically.
 
 ---
-
-### **v5.0: The Power User Update**
-*Automation, Audio & Visualization*
-
-* **🔊 Built-in Audio Alerts:** Implemented Web Audio API (no external files needed).
-    * **Ding:** Plays when a Portal enters the **ON** phase (5:00 remaining).
-    * **Bip:** Plays during **Warmup** (30s before opening).
-    * **Controls:** Added Mute button and Volume Slider to the dashboard header.
-* **💾 Data Persistence:** Settings (Volume, Auto-Start, Mute status) are now saved in `localStorage`, persisting across page refreshes (F5).
-* **📊 Dashboard 2.0:**
-    * **Progress Bars:** Added visual timeline bars within the table rows.
-    * **Sync Controls:** Added **`+30s`** and **`-30s`** buttons to manually nudge timers if the game server is desynchronized.
-    * **Filters:** Added a dropdown to toggle between "Show All" and "Show Active/ON Only".
-* **🤖 Automation:**
-    * **Auto-Start:** Option to automatically start the timer (defaulting to Portal Mode) after the 10s waiting period.
-    * **Auto-Scroll:** Option to automatically scroll the page down to lazy-load more servers from the Roblox list.
-* **🎨 Visual Overhaul:** Darker theme, refined CSS, and color-coded tags for statuses (Green for ON, Yellow for Warmup, Gray for OFF).
-
----
-
-### **v4.0: The "Portal Mode" Update**
-*Logic Split*
-
-* **🔀 Dual Operation Modes:**
-    * **Raid Mode:** Standard countdown. Counts into negatives when finished (e.g., `-00:45`). Turns **Red** upon completion.
-    * **Portal Mode:** Infinite Loop. Counts down from 10 minutes. Automatically resets to 10:00 when it hits 0.
-* **🔛 Portal Phases:**
-    * **ON (10m - 5m):** Badge shows "PORTAL ON" (Green).
-    * **OFF (5m - 0m):** Badge shows "PORTAL OFF" (Gray).
-* **🎛️ Dashboard Toggles:** Added a toggle switch in the table to switch specific servers between Raid and Portal modes on the fly.
-
----
-
-### **v3.0: The Quality of Life Update**
-*Foundations*
-
-* **⏱️ Quick Presets:** Added `5m`, `10m`, and `120m` buttons to the local controls to quickly set timer duration.
-* **🔦 Visual Locator:** Clicking the **"Go"** button in the dashboard now scrolls to the specific Join button and flashes it (opacity/border blink effect) 5 times for easy spotting.
-* **🔽 Minimizable Dashboard:** Added a minimize/maximize button (`_` / `+`) to the floating table to save screen space.
-* **⚠️ Blinking Logic:** Fixed issues where the table would take up too much vertical space.
+*Current Version: v1.1*
