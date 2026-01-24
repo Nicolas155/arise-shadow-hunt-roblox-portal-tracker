@@ -368,8 +368,11 @@
                 if (e.wasVisited) return 1000;
                 return 0;
             };
-            const diff = getScore(b) - getScore(a);
-            return diff !== 0 ? diff : a.id - b.id;
+            const sA = getScore(a);
+            const sB = getScore(b);
+            // Fix flapping: if scores are very close (<= 3s difference), use ID for stability
+            if (Math.abs(sA - sB) <= 3) return a.id - b.id;
+            return sB - sA;
         });
 
         filtered.forEach(entry => {
