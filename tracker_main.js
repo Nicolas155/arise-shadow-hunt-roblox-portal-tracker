@@ -44,6 +44,7 @@
     // Logic Functions
     RPT.adjustTime = function(entry, s) {
         entry.timeLeft += s;
+        if(entry.targetTimestamp) entry.targetTimestamp += (s * 1000);
         if(entry.displayElement) RPT.updateDisplayLocal(entry.displayElement, entry);
         RPT.saveServerState(entry);
         RPT.renderDashboard();
@@ -85,6 +86,7 @@
              entry.mode = s.mode || 'raid';
              entry.wasVisited = s.wasVisited || false;
              if(s.state === 'running' && s.targetTimestamp) {
+                 entry.targetTimestamp = s.targetTimestamp;
                  const diff = Math.floor((s.targetTimestamp - Date.now()) / 1000);
                  if(entry.mode === 'portal') {
                      if (diff > 0) {
@@ -225,5 +227,5 @@
 
         RPT.renderDashboard();
     });
-    console.log("%c Portal Tracker v1.0 - Modules Loaded ", "background: #5c2d91; color: white; font-size: 14px;");
+    console.log("%c Portal Tracker v1.2 - Modules Loaded ", "background: #5c2d91; color: white; font-size: 14px;");
 })();

@@ -121,7 +121,7 @@
             <div id="resize-handle-tl" class="resize-handle-tl" title="Drag to Resize"></div>
             <div class="dash-header">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span>🛡️ <b>Portal Tracker v1.1</b></span>
+                    <span>🛡️ <b>Portal Tracker v1.2</b></span>
                     <button id="btn-help" class="btn-icon" style="background:#00a2ff; width:18px; height:18px; line-height:14px; padding:0; border-radius:50%; font-weight:bold;" title="Help">?</button>
                 </div>
                 <button id="btn-minimize" class="btn-icon">_</button>
@@ -410,19 +410,36 @@
                     alert("⚠️ Limit Exceeded: 10 Minutes\n\nIn Portal Mode, the max time is 10 minutes.\nPlease check the Help (?) button for instructions.");
                     return;
                 }
-                entry.timeLeft = Math.floor(v*60); 
+                entry.timeLeft = Math.floor(v*60);
+                entry.targetTimestamp = Date.now() + (entry.timeLeft * 1000);
+            } else {
+                if(!entry.targetTimestamp) entry.targetTimestamp = Date.now() + (entry.timeLeft * 1000);
             }
             entry.state='running'; entry.lastAudioPhase=null;
             if (entry.buttonElement === RPT.state.lastClickedButton) entry.wasVisited = true;
             RPT.updateDisplayLocal(dsp, entry); RPT.renderDashboard();
             RPT.saveServerState(entry);
             entry.intervalId = setInterval(()=>{
-                entry.timeLeft--;
+                const now = Date.now();
+                let diff = Math.ceil((entry.targetTimestamp - now) / 1000);
+
                 if(entry.mode==='portal') {
-                    if(entry.timeLeft <= 0) { entry.timeLeft = 600; entry.wasVisited = false; RPT.renderDashboard(); }
+                    // Heartbeat Logic: Calculate Real Cycle Time
+                    if(diff <= 0) { 
+                        while(diff <= 0) {
+                            entry.targetTimestamp += 600000; // Add 10 mins
+                            diff = Math.ceil((entry.targetTimestamp - now) / 1000);
+                        }
+                        entry.wasVisited = false; 
+                        RPT.renderDashboard(); 
+                    }
+                    entry.timeLeft = diff;
                     if(entry.timeLeft===300 && entry.lastAudioPhase!=='open') { RPT.playAlert('portal_open'); entry.lastAudioPhase='open'; }
                     if(entry.timeLeft===30 && entry.lastAudioPhase!=='warm') { RPT.playAlert('warmup'); entry.lastAudioPhase='warm'; }
-                } else { if(entry.timeLeft<=0) entry.state='finished'; }
+                } else { 
+                    entry.timeLeft = diff;
+                    if(entry.timeLeft<=0) { entry.timeLeft=0; entry.state='finished'; } 
+                }
                 RPT.updateDisplayLocal(dsp, entry);
                 if(entry.timeLeft % 5 === 0) RPT.saveServerState(entry);
                 RPT.renderDashboard();

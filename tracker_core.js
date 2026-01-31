@@ -78,8 +78,8 @@ window.RPT = window.RPT || {};
         }
         const all = JSON.parse(localStorage.getItem(RPT.SERVER_DATA_KEY)||"{}");
         const now = Date.now();
-        let target = null;
-        if(entry.state==='running') target = now + (entry.timeLeft*1000);
+        let target = entry.targetTimestamp || null;
+        if(!target && entry.state==='running') target = now + (entry.timeLeft*1000);
         
         all[entry.serverId] = {
             mode: entry.mode,

@@ -1,4 +1,4 @@
-# ️ Roblox Portal Tracker v1.1
+# ️ Roblox Portal Tracker v1.2
 
 A powerful browser extension script designed to help players track **Portal** and **Siege** timers in *Arise: Shadow Hunt* directly from the Roblox server list page.
 
@@ -64,5 +64,11 @@ If you want to track server automatically, check my other project that integrate
 
 <a href="https://github.com/Nicolas155/roblox-portal-tracker-screen-ocr" target="_blank" style="color:#00a2ff">GitHub Project</a>
 
+## 🆕 What's New in v1.2
+*   **Table Stability:** Fixed an issue where server rows would "flap" or jump around when timers were very close to each other. The sorting logic now uses the Server ID as a tie-breaker for stability.
+*   **API Polling:** Improved synchronization logic when switching servers. The script now handles stale Process IDs (PIDs) better to prevent incorrect timer overrides when joining a new server.
+*   **Background Precision:** Optimized timer logic to rely on absolute timestamps. This ensures timers remain accurate even when the browser tab is in the background or throttled.
+*   **General:** Updated version references and minor UI tweaks.
+
 ---
-*Current Version: v1.1*
+*Current Version: v1.2*
